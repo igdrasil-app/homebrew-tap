@@ -1,10 +1,10 @@
 cask "iris" do
-  version "0.1.3"
-  sha256 "ad7fc4f25de1c0b874a501c1124b96c171589f99002d828d6a27735945b9a679"
+  version "0.1.4"
+  sha256 "a04c973c7952a04c2bf78c39dc813a88a473bed9c74bb4f2765a84a473b7ab16"
 
   url "https://github.com/igdrasil-app/homebrew-tap/releases/download/v#{version}/Iris-#{version}.tar.gz"
   name "Iris"
-  desc "Apple Calendar for the coding agents you run"
+  desc "Apple Calendar and Notes for the coding agents you run"
   homepage "https://github.com/igdrasil-app/iris"
 
   # The menu bar app updates itself with Sparkle; a plain brew upgrade skips a bundle that is already current.
