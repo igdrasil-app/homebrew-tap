@@ -3,12 +3,12 @@
   <channel>
     <title>Iris</title>
     <item>
-      <title>0.1.5</title>
-      <pubDate>Wed, 25 Nov 2026 08:16:29 -0600</pubDate>
-      <sparkle:version>6</sparkle:version>
-      <sparkle:shortVersionString>0.1.5</sparkle:shortVersionString>
+      <title>0.1.6</title>
+      <pubDate>Wed, 25 Nov 2026 12:12:01 -0600</pubDate>
+      <sparkle:version>7</sparkle:version>
+      <sparkle:shortVersionString>0.1.6</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-      <enclosure url="https://github.com/igdrasil-app/homebrew-tap/releases/download/v0.1.5/Iris-0.1.5.tar.gz" sparkle:edSignature="F11yxpkBJFGN4LHFJyI3zfroxDmT6WdzaRzgxXAOVGOYXzIHkmeL9uuQejYdJ54/zRTZTnRp12dUcLJJhvMGBQ==" length="2627399" type="application/octet-stream"/>
+      <enclosure url="https://github.com/igdrasil-app/homebrew-tap/releases/download/v0.1.6/Iris-0.1.6.tar.gz" sparkle:edSignature="zcbwtRRSfVl1fc7DL3sZudzyeRScajo3/9cg47xLOYHeXWcKnuiJOiin4J85nlSTU01FexUunTawF4BQMVYoDA==" length="2632964" type="application/octet-stream"/>
     </item>
   </channel>
 </rss>
