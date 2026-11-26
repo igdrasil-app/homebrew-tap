@@ -1,6 +1,6 @@
 cask "iris" do
-  version "0.1.7"
-  sha256 "b457a6fb31dc95d77528359d73f556d6aee96cdb6c8f43de1e11e9f548c02176"
+  version "0.1.8"
+  sha256 "8bc6ef01b8fa062a285f5cd77f495c8a66f46749c9badce01d1618bbc1b33d3c"
 
   url "https://github.com/igdrasil-app/homebrew-tap/releases/download/v#{version}/Iris-#{version}.tar.gz"
   name "Iris"
