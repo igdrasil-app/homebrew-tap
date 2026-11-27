@@ -64,9 +64,11 @@ async function github(env, path) {
     "User-Agent": "iris-stats",
     "X-GitHub-Api-Version": "2022-11-28",
   };
-  // Only traffic carries the token: GitHub refuses any request with a bad one, and the public releases must not depend on it.
-  if (path.includes("/traffic/")) headers.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
-  const response = await fetch(`https://api.github.com/${path}`, { headers });
+  const url = `https://api.github.com/${path}`;
+  // Every request carries the token: without one, Cloudflare's shared addresses run out of GitHub's anonymous limit (403).
+  let response = await fetch(url, { headers: { ...headers, Authorization: `Bearer ${env.GITHUB_TOKEN}` } });
+  // GitHub refuses any request with a bad token (401); the public releases must not depend on it.
+  if (response.status === 401 && !path.includes("/traffic/")) response = await fetch(url, { headers });
   if (!response.ok) throw new Error(`GitHub ${path}: ${response.status}`);
   return response.json();
 }
