@@ -1,4 +1,6 @@
 // The Iris update feed, passed through from GitHub byte for byte, and one count per update check.
+// A running copy checks once a day, so a day's checks approximate the copies running that day;
+// a manual "Check for Updates…" counts again, and copies still polling GitHub's URL are not seen.
 // A check adds 1 to (day, version, country). Nothing else about the request is read or kept:
 // no IP address, no user agent beyond Iris's version, no install id (Sparkle sends none).
 
@@ -30,21 +32,28 @@ export default {
   },
 };
 
-// The feed from GitHub, or null when GitHub fails or answers with something that is not a feed.
+// The feed's bytes from GitHub, or null when GitHub fails or answers with something that is not a feed.
 async function upstream(env) {
   try {
     const response = await fetch(env.UPSTREAM_URL, { signal: AbortSignal.timeout(5000) });
     if (!response.ok) return null;
-    const body = await response.text();
-    return body.includes("<rss") && body.includes("</rss>") ? body : null;
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    return looksLikeFeed(new TextDecoder().decode(bytes)) ? bytes : null;
   } catch {
     return null;
   }
 }
 
+// The shape release.sh writes: an XML declaration, one RSS channel, closed at the end.
+function looksLikeFeed(text) {
+  const trimmed = text.trim();
+  return trimmed.startsWith("<?xml") && trimmed.endsWith("</rss>") && /<rss[\s>]/.test(trimmed) && trimmed.includes("<channel>");
+}
+
 async function lastGoodCopy(env) {
   try {
-    return await env.DB.prepare("SELECT body FROM feed WHERE name = 'iris'").first("body");
+    const saved = await env.DB.prepare("SELECT body FROM feed WHERE name = 'iris'").first("body");
+    return saved === null ? null : new Uint8Array(saved);
   } catch {
     return null;
   }
@@ -69,7 +78,7 @@ async function record(env, request, fresh) {
       env.DB.prepare(
         "INSERT INTO feed (name, body) VALUES ('iris', ?) " +
           "ON CONFLICT (name) DO UPDATE SET body = excluded.body WHERE body != excluded.body",
-      ).bind(fresh),
+      ).bind(fresh.buffer),
     );
   }
   if (statements.length > 0) await env.DB.batch(statements);

@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS traffic (
   PRIMARY KEY (day, repo, kind)
 );
 
--- Update checks from Iris's menu bar app, which checks once a day: a day's sum is that day's active installs.
+-- Update checks from Iris's menu bar app, which checks once a day; see feed/index.js for what they do not cover.
 CREATE TABLE IF NOT EXISTS checks (
   day TEXT NOT NULL,
   version TEXT NOT NULL,
@@ -31,5 +31,5 @@ CREATE TABLE IF NOT EXISTS checks (
 -- The last feed GitHub served, for when GitHub cannot.
 CREATE TABLE IF NOT EXISTS feed (
   name TEXT PRIMARY KEY,
-  body TEXT NOT NULL
+  body BLOB NOT NULL
 );
