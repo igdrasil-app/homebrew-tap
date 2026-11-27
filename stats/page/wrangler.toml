@@ -15,8 +15,8 @@ custom_domain = true
 # The Cloudflare Access application in front of stats.igdrasil.app: its team domain and audience tag.
 # While either is empty, every request is refused.
 [vars]
-ACCESS_TEAM_DOMAIN = ""
-ACCESS_AUD = ""
+ACCESS_TEAM_DOMAIN = "ancient-hill-6d88.cloudflareaccess.com"
+ACCESS_AUD = "9100731c50b57a167a79ecad63be8d2bf164027c981458b3834ad2aa104f4411"
 
 [[d1_databases]]
 binding = "DB"
