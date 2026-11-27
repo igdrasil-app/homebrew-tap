@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS downloads (
   tag TEXT NOT NULL,
   asset TEXT NOT NULL,
   total INTEGER NOT NULL,
-  PRIMARY KEY (day, asset)
+  PRIMARY KEY (day, tag, asset)
 );
 
 -- GitHub's own per-day traffic buckets (UTC). GitHub keeps 14 days; each run rewrites them, so a day settles once it is past.

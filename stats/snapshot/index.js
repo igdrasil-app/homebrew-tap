@@ -31,7 +31,7 @@ async function downloads(env, day) {
         statements.push(
           env.DB.prepare(
             "INSERT INTO downloads (day, tag, asset, total) VALUES (?, ?, ?, ?) " +
-              "ON CONFLICT (day, asset) DO UPDATE SET total = excluded.total",
+              "ON CONFLICT (day, tag, asset) DO UPDATE SET total = excluded.total",
           ).bind(day, release.tag_name, asset.name, asset.download_count),
         );
       }
@@ -64,8 +64,8 @@ async function github(env, path) {
     "User-Agent": "iris-stats",
     "X-GitHub-Api-Version": "2022-11-28",
   };
-  // Releases are public; traffic needs the token.
-  if (env.GITHUB_TOKEN) headers.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
+  // Only traffic carries the token: GitHub refuses any request with a bad one, and the public releases must not depend on it.
+  if (path.includes("/traffic/")) headers.Authorization = `Bearer ${env.GITHUB_TOKEN}`;
   const response = await fetch(`https://api.github.com/${path}`, { headers });
   if (!response.ok) throw new Error(`GitHub ${path}: ${response.status}`);
   return response.json();

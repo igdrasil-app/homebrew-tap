@@ -1,6 +1,6 @@
 # Iris usage counts
 
-How many people use Iris, counted without tracking anyone.
+Daily counts of release downloads and repository traffic, without tracking anyone. Downloads include updates and repeat downloads, so they are not a count of people.
 
 ## What is kept
 
