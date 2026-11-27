@@ -1,0 +1,24 @@
+name = "iris-stats-page"
+main = "index.js"
+compatibility_date = "2026-11-01"
+workers_dev = false
+# Request logs would hold IP addresses; none are kept.
+logpush = false
+
+[observability]
+enabled = false
+
+[[routes]]
+pattern = "stats.igdrasil.app"
+custom_domain = true
+
+# The Cloudflare Access application in front of stats.igdrasil.app: its team domain and audience tag.
+# While either is empty, every request is refused.
+[vars]
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "iris-stats"
+database_id = "4eef509c-9e07-4c28-8587-0f962f1dc028"
