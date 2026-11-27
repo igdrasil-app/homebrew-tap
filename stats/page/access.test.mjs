@@ -41,6 +41,8 @@ test("everything else is refused", async () => {
   const refused = {
     "no token": request(null),
     "not a token": request("garbage"),
+    "a null header": request("bnVsbA.e30.AA"),
+    "a signature that is not base64": request(`${(await token({})).split(".").slice(0, 2).join(".")}.!!!`),
     "another application": request(await token({ aud: ["someone-else"] })),
     "another team": request(await token({ iss: "https://other.cloudflareaccess.com" })),
     expired: request(await token({ exp: now - 1 })),

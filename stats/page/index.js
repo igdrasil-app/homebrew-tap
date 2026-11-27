@@ -42,11 +42,15 @@ export async function load(env) {
   const checksByDay = new Map(checks.results.map((row) => [row.day, row.n]));
   const checkSeries = days(since, today).map((d) => ({ day: d, value: checksByDay.get(d) ?? 0 }));
 
-  // New downloads per day: the change in the cumulative total since the day before it was read.
+  // New downloads per day: the change in the cumulative total from the day before. A day after a missed
+  // snapshot is left out, so a gap's downloads are never put on one day.
   const downloadSeries = [];
   for (let i = 1; i < totals.results.length; i++) {
     const row = totals.results[i];
-    if (row.day >= since) downloadSeries.push({ day: row.day, value: Math.max(0, row.n - totals.results[i - 1].n) });
+    const previous = totals.results[i - 1];
+    if (row.day >= since && previous.day === shift(row.day, -1)) {
+      downloadSeries.push({ day: row.day, value: Math.max(0, row.n - previous.n) });
+    }
   }
 
   return {
@@ -124,7 +128,7 @@ export function render(data, email, nonce) {
 
 <section>
   <h2>New downloads per day</h2>
-  <p class="muted">From GitHub's release counts, read once a day. Includes updates and repeat downloads.</p>
+  <p class="muted">From GitHub's release counts, read once a day. Includes updates and repeat downloads; a day after a missed reading is left out.</p>
   ${barChart("downloads", data.downloadSeries, "new downloads")}
 </section>
 
@@ -239,6 +243,10 @@ function countryName(code) {
 
 function day(offset) {
   return new Date(Date.now() + offset * 86400_000).toISOString().slice(0, 10);
+}
+
+function shift(iso, offset) {
+  return new Date(Date.parse(`${iso}T00:00:00Z`) + offset * 86400_000).toISOString().slice(0, 10);
 }
 
 function days(from, to) {

@@ -3,7 +3,16 @@
 
 let certs = { keys: null, fetchedAt: 0, domain: "" };
 
+// The signed-in email, or null for anything else: no token, a malformed one, or one that fails any check.
 export async function verifiedEmail(request, env) {
+  try {
+    return await verify(request, env);
+  } catch {
+    return null;
+  }
+}
+
+async function verify(request, env) {
   const domain = env.ACCESS_TEAM_DOMAIN;
   const audience = env.ACCESS_AUD;
   if (!domain || !audience) return null;
@@ -19,6 +28,7 @@ export async function verifiedEmail(request, env) {
   } catch {
     return null;
   }
+  if (!header || !claims || typeof header !== "object" || typeof claims !== "object") return null;
   if (header.alg !== "RS256" || typeof header.kid !== "string") return null;
 
   const key = await signingKey(domain, header.kid);
