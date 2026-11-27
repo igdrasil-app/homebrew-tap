@@ -27,31 +27,49 @@ export default {
   },
 };
 
-export async function load(env) {
+// Every date on the page comes from one reading of the clock, so a request across midnight stays one day.
+export async function load(env, now = Date.now()) {
+  const day = (offset) => shift(new Date(now).toISOString().slice(0, 10), offset);
   const today = day(0);
   const since = day(-(CHART_DAYS - 1));
-  const [checks, versions, countries, totals, latest, traffic] = await env.DB.batch([
+  const [checks, versions, countries, downloads, traffic] = await env.DB.batch([
     env.DB.prepare("SELECT day, sum(count) AS n FROM checks WHERE day >= ? GROUP BY day").bind(since),
     env.DB.prepare("SELECT version, sum(count) AS n FROM checks WHERE day >= ? GROUP BY version ORDER BY n DESC").bind(day(-6)),
     env.DB.prepare("SELECT country, sum(count) AS n FROM checks WHERE day >= ? GROUP BY country ORDER BY n DESC").bind(day(-29)),
-    env.DB.prepare("SELECT day, sum(total) AS n FROM downloads GROUP BY day ORDER BY day"),
-    env.DB.prepare("SELECT tag, sum(total) AS n FROM downloads WHERE day = (SELECT max(day) FROM downloads) GROUP BY tag"),
+    env.DB.prepare("SELECT day, tag, asset, total FROM downloads ORDER BY day"),
     env.DB.prepare("SELECT day, repo, kind, count, uniques FROM traffic WHERE day >= ? ORDER BY day DESC").bind(day(-13)),
   ]);
 
   const checksByDay = new Map(checks.results.map((row) => [row.day, row.n]));
   const checkSeries = days(since, today).map((d) => ({ day: d, value: checksByDay.get(d) ?? 0 }));
 
-  // New downloads per day: the change in the cumulative total from the day before. A day after a missed
-  // snapshot is left out, so a gap's downloads are never put on one day.
+  // Each day's snapshot: every release file's cumulative count.
+  const snapshots = new Map();
+  for (const row of downloads.results) {
+    if (!snapshots.has(row.day)) snapshots.set(row.day, new Map());
+    snapshots.get(row.day).set(`${row.tag}/${row.asset}`, { tag: row.tag, total: row.total });
+  }
+  const snapshotDays = [...snapshots.keys()];
+  const latest = snapshots.get(snapshotDays.at(-1)) ?? new Map();
+
+  // New downloads per day, counted per release file, so a deleted file cannot cancel another's downloads.
+  // A day after a missed snapshot is left out, so a gap's downloads are never put on one day.
   const downloadSeries = [];
-  for (let i = 1; i < totals.results.length; i++) {
-    const row = totals.results[i];
-    const previous = totals.results[i - 1];
-    if (row.day >= since && previous.day === shift(row.day, -1)) {
-      downloadSeries.push({ day: row.day, value: Math.max(0, row.n - previous.n) });
+  for (let i = 1; i < snapshotDays.length; i++) {
+    const d = snapshotDays[i];
+    if (d >= since && snapshotDays[i - 1] === shift(d, -1)) {
+      downloadSeries.push({ day: d, value: growth(snapshots.get(snapshotDays[i - 1]), snapshots.get(d)) });
     }
   }
+
+  // The week runs from the snapshot 7 days back; without one, it adds the days it can and says so.
+  const weekStart = snapshots.get(day(-7));
+  const downloadsWeek = weekStart
+    ? growth(weekStart, latest)
+    : downloadSeries.filter((row) => row.day >= day(-6)).reduce((sum, row) => sum + row.value, 0);
+
+  const byTag = new Map();
+  for (const { tag, total } of latest.values()) byTag.set(tag, (byTag.get(tag) ?? 0) + total);
 
   return {
     today,
@@ -61,11 +79,19 @@ export async function load(env) {
     versions: versions.results,
     countries: groupSmall(countries.results),
     downloadSeries,
-    downloadsTotal: totals.results.at(-1)?.n ?? 0,
-    downloadsWeek: downloadSeries.filter((row) => row.day >= day(-6)).reduce((sum, row) => sum + row.value, 0),
-    releases: latest.results.sort((a, b) => compareVersions(b.tag, a.tag)),
+    downloadsTotal: [...latest.values()].reduce((sum, file) => sum + file.total, 0),
+    downloadsWeek,
+    downloadsWeekPartial: !weekStart,
+    releases: [...byTag].map(([tag, n]) => ({ tag, n })).sort((a, b) => compareVersions(b.tag, a.tag)),
     traffic: trafficRows(traffic.results),
   };
+}
+
+// Downloads between two snapshots: each file's growth, a file new since the first counting in full.
+function growth(before, after) {
+  let sum = 0;
+  for (const [key, file] of after) sum += Math.max(0, file.total - (before.get(key)?.total ?? 0));
+  return sum;
 }
 
 // Countries with fewer than MIN_COUNTRY checks are folded into Other, so no row describes one person.
@@ -104,7 +130,7 @@ export function render(data, email, nonce) {
 <section class="tiles">
   ${tile("Update checks yesterday", format(data.yesterday))}
   ${tile("Daily average, last 7 days", format(data.weekAverage, 1))}
-  ${tile("New downloads, last 7 days", format(data.downloadsWeek))}
+  ${tile(data.downloadsWeekPartial ? "New downloads, last 7 days (partial)" : "New downloads, last 7 days", format(data.downloadsWeek))}
   ${tile("Downloads, all releases", format(data.downloadsTotal))}
 </section>
 
@@ -140,8 +166,14 @@ export function render(data, email, nonce) {
   <div>
     <h2>GitHub traffic, last 14 days</h2>
     ${table(
-      ["Day", "iris clones", "iris views", "tap clones"],
-      data.traffic.map((row) => [shortDay(row.day), pair(row.cells["iris clones"]), pair(row.cells["iris views"]), pair(row.cells["homebrew-tap clones"])]),
+      ["Day", "iris clones", "iris views", "tap clones", "tap views"],
+      data.traffic.map((row) => [
+        shortDay(row.day),
+        pair(row.cells["iris clones"]),
+        pair(row.cells["iris views"]),
+        pair(row.cells["homebrew-tap clones"]),
+        pair(row.cells["homebrew-tap views"]),
+      ]),
       "No traffic read yet.",
     )}
     <p class="muted small">Total (unique). iris clones are mostly agent sessions, not people.</p>
@@ -239,10 +271,6 @@ function countryName(code) {
   } catch {
     return code;
   }
-}
-
-function day(offset) {
-  return new Date(Date.now() + offset * 86400_000).toISOString().slice(0, 10);
 }
 
 function shift(iso, offset) {

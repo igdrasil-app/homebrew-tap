@@ -41,8 +41,8 @@ async function verify(request, env) {
   const audiences = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
   if (!audiences.includes(audience)) return null;
   if (claims.iss !== `https://${domain}`) return null;
-  if (typeof claims.exp !== "number" || claims.exp <= now) return null;
-  if (typeof claims.nbf === "number" && claims.nbf > now + 60) return null;
+  if (!Number.isFinite(claims.exp) || claims.exp <= now) return null;
+  if (claims.nbf !== undefined && (!Number.isFinite(claims.nbf) || claims.nbf > now + 60)) return null;
   return typeof claims.email === "string" ? claims.email : null;
 }
 

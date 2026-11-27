@@ -47,6 +47,8 @@ test("everything else is refused", async () => {
     "another team": request(await token({ iss: "https://other.cloudflareaccess.com" })),
     expired: request(await token({ exp: now - 1 })),
     "not yet valid": request(await token({ nbf: now + 3600 })),
+    "an endless expiry": request(await token({ exp: "never" })),
+    "a not-before that is not a number": request(await token({ nbf: "later" })),
     "signed by another key": request(await token({}, { key: other.privateKey })),
     "unknown key id": request(await token({}, { kid: "k2" })),
     "another algorithm": request(await token({}, { alg: "HS256" })),
