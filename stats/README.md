@@ -55,6 +55,23 @@ After a schema change, run the `execute --file schema.sql` line again from `stat
 
 ## Read
 
+**https://stats.igdrasil.app** shows every count on one page: daily update checks, versions, countries, downloads and GitHub traffic. Countries with fewer than 5 checks are grouped as Other. The `page` Worker only reads the database.
+
+Cloudflare Access lets in only the owner's email. The page also verifies the Access token itself, so with `ACCESS_TEAM_DOMAIN` or `ACCESS_AUD` empty in `page/wrangler.toml` it refuses everyone. To deploy, from `stats/page`:
+
+1. Run `npx wrangler deploy`.
+2. In the Cloudflare dashboard, under Zero Trust → Access → Applications, add a self-hosted application for `stats.igdrasil.app`, with a policy that allows only the owner's email.
+3. Put the team domain (`<team>.cloudflareaccess.com`) and the application's audience tag into `page/wrangler.toml`, then deploy again.
+
+To check the token handling, run `node --test page/access.test.mjs`. To look at the page without Access, copy the database locally and run `node page/preview.mjs preview.html`:
+
+```sh
+npx wrangler d1 export iris-stats --remote --output dump.sql
+(cd page && npx wrangler d1 execute iris-stats --local --file ../dump.sql)
+```
+
+The raw numbers:
+
 ```sh
 npx wrangler d1 execute iris-stats --remote --command \
   "SELECT day, version, sum(count) AS checks FROM checks GROUP BY day, version ORDER BY day"
