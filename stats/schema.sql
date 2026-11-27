@@ -18,3 +18,18 @@ CREATE TABLE IF NOT EXISTS traffic (
   uniques INTEGER NOT NULL,
   PRIMARY KEY (day, repo, kind)
 );
+
+-- Update checks from Iris's menu bar app, which checks once a day: a day's sum is that day's active installs.
+CREATE TABLE IF NOT EXISTS checks (
+  day TEXT NOT NULL,
+  version TEXT NOT NULL,
+  country TEXT NOT NULL,
+  count INTEGER NOT NULL,
+  PRIMARY KEY (day, version, country)
+);
+
+-- The last feed GitHub served, for when GitHub cannot.
+CREATE TABLE IF NOT EXISTS feed (
+  name TEXT PRIMARY KEY,
+  body TEXT NOT NULL
+);

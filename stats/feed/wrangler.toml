@@ -1,0 +1,22 @@
+name = "iris-stats-feed"
+main = "index.js"
+compatibility_date = "2026-11-01"
+workers_dev = false
+# Request logs would hold IP addresses; none are kept.
+logpush = false
+
+[observability]
+enabled = false
+
+[[routes]]
+pattern = "updates.igdrasil.app"
+custom_domain = true
+
+[vars]
+UPSTREAM_URL = "https://raw.githubusercontent.com/igdrasil-app/homebrew-tap/main/Appcasts/iris.xml"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "iris-stats"
+# The same database as snapshot/wrangler.toml.
+database_id = "00000000-0000-0000-0000-000000000000"
