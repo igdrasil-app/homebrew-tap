@@ -19,4 +19,4 @@ UPSTREAM_URL = "https://raw.githubusercontent.com/igdrasil-app/homebrew-tap/main
 binding = "DB"
 database_name = "iris-stats"
 # The same database as snapshot/wrangler.toml.
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "4eef509c-9e07-4c28-8587-0f962f1dc028"

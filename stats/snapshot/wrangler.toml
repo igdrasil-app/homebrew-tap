@@ -12,4 +12,4 @@ crons = ["0 23 * * *"]
 binding = "DB"
 database_name = "iris-stats"
 # Printed by `wrangler d1 create iris-stats`.
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "4eef509c-9e07-4c28-8587-0f962f1dc028"

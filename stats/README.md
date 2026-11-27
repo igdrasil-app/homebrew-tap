@@ -15,6 +15,12 @@ What is never kept: IP addresses, install ids, full user agents, or anything els
 
 ## Deploy (owner only)
 
+Deployed 2026-11-27; database `iris-stats` is `4eef509c-9e07-4c28-8587-0f962f1dc028`. Wrangler reports its own usage to Cloudflare unless told not to, so keep that off in the shell:
+
+```sh
+export WRANGLER_SEND_METRICS=false
+```
+
 From `stats/`, once:
 
 ```sh
