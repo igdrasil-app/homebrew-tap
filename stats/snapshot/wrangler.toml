@@ -1,0 +1,15 @@
+name = "iris-stats-snapshot"
+main = "index.js"
+compatibility_date = "2026-11-01"
+# No URL: it only runs on its schedule.
+workers_dev = false
+
+[triggers]
+# Late in the UTC day, so today's bucket is nearly whole; the next run settles it.
+crons = ["0 23 * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "iris-stats"
+# Printed by `wrangler d1 create iris-stats`.
+database_id = "00000000-0000-0000-0000-000000000000"
